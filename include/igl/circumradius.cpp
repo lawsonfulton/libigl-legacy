@@ -24,3 +24,7 @@ IGL_INLINE void igl::circumradius(
   // use formula: R=abc/(4*area) to compute the circum radius
   R = l.col(0).array() * l.col(1).array() * l.col(2).array() / (2.0*A.array());
 }
+#ifdef IGL_STATIC_LIBRARY
+// Explicit template instantiation
+template void igl::circumradius<Eigen::Matrix<double, -1, -1, 0, -1, -1>, Eigen::Matrix<int, -1, -1, 0, -1, -1>, Eigen::Matrix<double, -1, 1, 0, -1, 1> >(Eigen::PlainObjectBase<Eigen::Matrix<double, -1, -1, 0, -1, -1> > const&, Eigen::PlainObjectBase<Eigen::Matrix<int, -1, -1, 0, -1, -1> > const&, Eigen::PlainObjectBase<Eigen::Matrix<double, -1, 1, 0, -1, 1> >&);
+#endif

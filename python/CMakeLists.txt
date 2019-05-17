@@ -2,17 +2,16 @@ cmake_minimum_required(VERSION 2.8.12)
 project(pyigl)
 
 # Force a specific python version
-# set(PYTHON_LIBRARIES "D:/Python34/libs/python34.lib")
-# set(PYTHON_INCLUDE_DIR "D:/Python34/include")
+set(PYTHON_LIBRARIES ${PROJECT_SOURCE_DIR}/../../anaconda/lib/python3.6)
+set(PYTHON_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../../anaconda/include/python3.6m)
 
 # Force a specific python version
 # set(PYTHON_LIBRARIES "/usr/local/Cellar/python3/3.5.0/Frameworks/Python.framework/Versions/3.5/lib/libpython3.5m.dylib")
 # set(PYTHON_INCLUDE_DIR "/usr/local/Cellar/python3/3.5.0/Frameworks/Python.framework/Versions/3.5/include/python3.5m")
 
-set(Python_ADDITIONAL_VERSIONS 3.4 3.5 3.6)
-find_package(PythonInterp REQUIRED)
+#set(Python_ADDITIONAL_VERSIONS 3.7)
 find_package(PythonLibs REQUIRED)
-
+find_package(PythonInterp REQUIRED)
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" U_CMAKE_BUILD_TYPE)
 if(UNIX)
@@ -24,27 +23,27 @@ if(UNIX)
 endif()
 
 ## include pybind
-set(PYBIND11_DIR ${PROJECT_SOURCE_DIR}/../external/pybind11 CACHE PATH "Path to pybind11")
-add_subdirectory(${PYBIND11_DIR} pybind11)
+add_subdirectory(${PROJECT_SOURCE_DIR}/../external/nanogui/ext/pybind11 pybind11)
 
 ## include libigl
 option(LIBIGL_USE_STATIC_LIBRARY "Use LibIGL as static library" OFF)
-option(LIBIGL_WITH_OPENGL            "Use viewer"         ON)
-option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           ON)
-option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use ImGui"          OFF)
-option(LIBIGL_WITH_CGAL              "Use CGAL"           OFF)
-option(LIBIGL_WITH_BOOLEAN           "Use Cork boolean"   OFF)
-option(LIBIGL_WITH_COMISO            "Use CoMiso"         ON)
-option(LIBIGL_WITH_EMBREE            "Use Embree"         ON)
-option(LIBIGL_WITH_LIM               "Use LIM"            ON)
-option(LIBIGL_WITH_MATLAB            "Use Matlab"         OFF)
-option(LIBIGL_WITH_MOSEK             "Use MOSEK"          OFF)
-option(LIBIGL_WITH_PNG               "Use PNG"            ON)
-option(LIBIGL_WITH_TETGEN            "Use Tetgen"         ON)
-option(LIBIGL_WITH_TRIANGLE          "Use Triangle"       ON)
-option(LIBIGL_WITH_XML               "Use XML"            ON)
-option(LIBIGL_WITH_PYTHON            "Use Python"         ON)
-option(LIBIGL_WITH_COPYLEFT          "Use Copyleft"       ON)
+option(LIBIGL_WITH_VIEWER           "Use OpenGL viewer"  ON)
+option(LIBIGL_WITH_OPENGL           "Use viewer"         ON)
+option(LIBIGL_WITH_OPENGL_GLFW      "Use GLFW"           ON)
+option(LIBIGL_WITH_NANOGUI          "Use Nanogui menu"   OFF)
+option(LIBIGL_WITH_CGAL             "Use CGAL"           OFF)
+option(LIBIGL_WITH_BOOLEAN          "Use Cork boolean"   OFF)
+option(LIBIGL_WITH_COMISO           "Use CoMiso"         ON)
+option(LIBIGL_WITH_EMBREE           "Use Embree"         ON)
+option(LIBIGL_WITH_LIM              "Use LIM"            ON)
+option(LIBIGL_WITH_MATLAB           "Use Matlab"         OFF)
+option(LIBIGL_WITH_MOSEK            "Use MOSEK"          OFF)
+option(LIBIGL_WITH_PNG              "Use PNG"            ON)
+option(LIBIGL_WITH_TETGEN           "Use Tetgen"         ON)
+option(LIBIGL_WITH_TRIANGLE         "Use Triangle"       ON)
+option(LIBIGL_WITH_XML              "Use XML"            ON)
+option(LIBIGL_WITH_PYTHON           "Use Python"         ON)
+option(LIBIGL_WITH_COPYLEFT         "Use Copyleft"       ON)
 
 ## libigl
 if(NOT TARGET igl::core)
@@ -64,10 +63,10 @@ pybind11_add_module(pyigl
 target_include_directories(pyigl PUBLIC igl::core)
 
 ## Optional modules
-if(LIBIGL_WITH_OPENGL_GLFW)
-  target_sources(pyigl PRIVATE "modules/py_igl_opengl_glfw.cpp")
-  target_compile_definitions(pyigl PUBLIC -DPY_GLFW)
-  target_link_libraries(pyigl PUBLIC igl::opengl igl::opengl_glfw)
+if(LIBIGL_WITH_VIEWER)
+  target_sources(pyigl PRIVATE "modules/py_igl_viewer.cpp")
+  target_compile_definitions(pyigl PUBLIC -DPY_VIEWER)
+  target_link_libraries(pyigl PUBLIC igl::viewer)
 endif()
 
 if(LIBIGL_WITH_COMISO)
@@ -114,6 +113,10 @@ endif()
 set_target_properties(pyigl PROPERTIES PREFIX "")
 set_target_properties(pyigl PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
+# Copy the nanogui bindings
+#get_target_property(NANOGUI_LIB nanogui_python LOCATION)
+#file(COPY ${NANOGUI_LIB} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../)
+
 if(WIN32)
   if(MSVC)
     # Enforce size-based optimization and link time code generation on MSVC (~30% smaller binaries in experiments)
@@ -127,7 +130,7 @@ if(WIN32)
   # Link against the Python shared library
   # message(FATAL_ERROR ${PYTHON_LIBRARY})
   # target_link_libraries(igl ${PYTHON_LIBRARY})
-  target_link_libraries(pyigl PRIVATE ${PYTHON_LIBRARIES})
+  target_link_libraries(pyigl ${PYTHON_LIBRARIES})
 
 elseif(UNIX)
   # It's quite common to have multiple copies of the same Python version
@@ -145,7 +148,7 @@ elseif(UNIX)
   # .SO file extension on Linux/Mac OS
   set_target_properties(pyigl PROPERTIES SUFFIX ".so")
 
-  # Enable flag if undefined symbols appear on pyigl module import to get notified about the missing symbols at link time
+  #Enable flag if undefined symbols appear on pyigl module import to get notified about the missing symbols at link time
   option(CHECK_UNDEFINED        "Check for undefined symbols"    OFF)
 
   # Strip unnecessary sections of the binary on Linux/Mac OS
@@ -162,7 +165,7 @@ elseif(UNIX)
   else()
 
     if(CHECK_UNDEFINED)
-      target_link_libraries(pyigl PRIVATE ${PYTHON_LIBRARIES})
+      target_link_libraries(pyigl ${PYTHON_LIBRARIES})
       set_target_properties(pyigl PROPERTIES LINK_FLAGS "-Wl,--no-undefined")
     endif()
 
@@ -172,3 +175,14 @@ elseif(UNIX)
   endif()
 endif()
 
+if(LIBIGL_WITH_PYTHON AND LIBIGL_WITH_NANOGUI)
+  # Copy the nanogui python lib after compilation
+  get_target_property(NANOGUI_LIB nanogui-python LOCATION)
+  add_custom_target(copy ALL)
+  add_custom_command(
+        TARGET copy
+        COMMAND ${CMAKE_COMMAND} -E copy ${NANOGUI_LIB} ${PROJECT_SOURCE_DIR}
+        )
+  add_dependencies(copy pyigl)
+
+endif()

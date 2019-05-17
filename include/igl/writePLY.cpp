@@ -56,7 +56,7 @@ IGL_INLINE bool igl::writePLY(
     FScalar *verts;              /* vertex index list */
   } Face;
 
-  igl::ply::PlyProperty vert_props[] =
+  PlyProperty vert_props[] =
   { /* list of property information for a vertex */
     {"x", ply_type<VScalar>(), ply_type<VScalar>(),offsetof(Vertex,x),0,0,0,0},
     {"y", ply_type<VScalar>(), ply_type<VScalar>(),offsetof(Vertex,y),0,0,0,0},
@@ -68,7 +68,7 @@ IGL_INLINE bool igl::writePLY(
     {"t", ply_type<UVScalar>(),ply_type<UVScalar>(),offsetof(Vertex,t),0,0,0,0},
   };
 
-  igl::ply::PlyProperty face_props[] =
+  PlyProperty face_props[] =
   { /* list of property information for a face */
     {"vertex_indices", ply_type<FScalar>(), ply_type<FScalar>(), 
       offsetof(Face,verts), 1, PLY_UCHAR, PLY_UCHAR, offsetof(Face,nverts)},
@@ -110,14 +110,14 @@ IGL_INLINE bool igl::writePLY(
   {
     return false;
   }
-  igl::ply::PlyFile * ply = igl::ply::ply_write(fp, 2,elem_names,
+  PlyFile * ply = ply_write(fp, 2,elem_names,
       (ascii ? PLY_ASCII : PLY_BINARY_LE));
   if(ply==NULL)
   {
     return false;
   }
 
-  std::vector<igl::ply::PlyProperty> plist;
+  std::vector<PlyProperty> plist;
   plist.push_back(vert_props[0]);
   plist.push_back(vert_props[1]);
   plist.push_back(vert_props[2]);
@@ -137,7 +137,7 @@ IGL_INLINE bool igl::writePLY(
 
   ply_describe_element(ply, "face", F.rows(),1,&face_props[0]);
   ply_header_complete(ply);
-  int native_binary_type = igl::ply::get_native_binary_type2();
+  int native_binary_type = get_native_binary_type2();
   ply_put_element_setup(ply, "vertex");
   for(const auto v : vlist)
   {
@@ -179,4 +179,5 @@ template bool igl::writePLY<Eigen::Matrix<double, 8, 3, 0, 8, 3>, Eigen::Matrix<
 template bool igl::writePLY<Eigen::Matrix<double, -1, -1, 0, -1, -1>, Eigen::Matrix<int, -1, -1, 0, -1, -1> >(std::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, Eigen::MatrixBase<Eigen::Matrix<double, -1, -1, 0, -1, -1> > const&, Eigen::MatrixBase<Eigen::Matrix<int, -1, -1, 0, -1, -1> > const&, bool);
 template bool igl::writePLY<Eigen::Matrix<double, -1, 3, 0, -1, 3>, Eigen::Matrix<int, -1, 3, 0, -1, 3> >(std::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, Eigen::MatrixBase<Eigen::Matrix<double, -1, 3, 0, -1, 3> > const&, Eigen::MatrixBase<Eigen::Matrix<int, -1, 3, 0, -1, 3> > const&, bool);
 template bool igl::writePLY<Eigen::Matrix<double, -1, 3, 1, -1, 3>, Eigen::Matrix<int, -1, 3, 1, -1, 3> >(std::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, Eigen::MatrixBase<Eigen::Matrix<double, -1, 3, 1, -1, 3> > const&, Eigen::MatrixBase<Eigen::Matrix<int, -1, 3, 1, -1, 3> > const&, bool);
+template bool igl::writePLY<Eigen::CwiseBinaryOp<Eigen::internal::scalar_sum_op<double, double>, Eigen::Matrix<double, -1, -1, 0, -1, -1> const, Eigen::Transpose<Eigen::Map<Eigen::Matrix<double, -1, -1, 0, -1, -1>, 0, Eigen::Stride<0, 0> > > const>, Eigen::Matrix<int, -1, -1, 0, -1, -1> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, Eigen::MatrixBase<Eigen::CwiseBinaryOp<Eigen::internal::scalar_sum_op<double, double>, Eigen::Matrix<double, -1, -1, 0, -1, -1> const, Eigen::Transpose<Eigen::Map<Eigen::Matrix<double, -1, -1, 0, -1, -1>, 0, Eigen::Stride<0, 0> > > const> > const&, Eigen::MatrixBase<Eigen::Matrix<int, -1, -1, 0, -1, -1> > const&, bool);
 #endif

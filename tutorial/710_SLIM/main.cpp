@@ -12,7 +12,7 @@
 #include "igl/harmonic.h"
 #include <igl/serialize.h>
 #include <igl/read_triangle_mesh.h>
-#include <igl/opengl/glfw/Viewer.h>
+#include <igl/viewer/Viewer.h>
 #include <igl/flipped_triangles.h>
 #include <igl/euler_characteristic.h>
 #include <igl/barycenter.h>
@@ -20,7 +20,6 @@
 #include <igl/is_edge_manifold.h>
 #include <igl/doublearea.h>
 #include <igl/cat.h>
-#include <igl/PI.h>
 
 #include <stdlib.h>
 
@@ -31,12 +30,12 @@ using namespace std;
 using namespace Eigen;
 
 void check_mesh_for_issues(Eigen::MatrixXd& V, Eigen::MatrixXi& F);
-void param_2d_demo_iter(igl::opengl::glfw::Viewer& viewer);
+void param_2d_demo_iter(igl::viewer::Viewer& viewer);
 void get_soft_constraint_for_circle(Eigen::MatrixXd& V_o, Eigen::MatrixXi& F, Eigen::VectorXi& b, Eigen::MatrixXd& bc);
-void soft_const_demo_iter(igl::opengl::glfw::Viewer& viewer);
-void deform_3d_demo_iter(igl::opengl::glfw::Viewer& viewer);
+void soft_const_demo_iter(igl::viewer::Viewer& viewer);
+void deform_3d_demo_iter(igl::viewer::Viewer& viewer);
 void get_cube_corner_constraints(Eigen::MatrixXd& V_o, Eigen::MatrixXi& F, Eigen::VectorXi& b, Eigen::MatrixXd& bc);
-void display_3d_mesh(igl::opengl::glfw::Viewer& viewer);
+void display_3d_mesh(igl::viewer::Viewer& viewer);
 void int_set_to_eigen_vector(const std::set<int>& int_set, Eigen::VectorXi& vec);
 
 Eigen::MatrixXd V;
@@ -54,7 +53,7 @@ enum DEMO_TYPE {
 };
 DEMO_TYPE demo_type;
 
-bool key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int modifier){
+bool key_down(igl::viewer::Viewer& viewer, unsigned char key, int modifier){
   if (key == ' ') {
     switch (demo_type) {
       case PARAM_2D: {
@@ -77,7 +76,7 @@ bool key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int modifier
   return false;
 }
 
-void param_2d_demo_iter(igl::opengl::glfw::Viewer& viewer) {
+void param_2d_demo_iter(igl::viewer::Viewer& viewer) {
   if (first_iter) {
     timer.start();
     igl::read_triangle_mesh(TUTORIAL_SHARED_PATH "/face.obj", V, F);
@@ -101,21 +100,21 @@ void param_2d_demo_iter(igl::opengl::glfw::Viewer& viewer) {
     slim_precompute(V,F,uv_init,sData, igl::SLIMData::SYMMETRIC_DIRICHLET, b,bc,0);
 
     uv_scale_param = 15 * (1./sqrt(sData.mesh_area));
-    viewer.data().set_mesh(V, F);
+    viewer.data.set_mesh(V, F);
     viewer.core.align_camera_center(V,F);
-    viewer.data().set_uv(sData.V_o*uv_scale_param);
-    viewer.data().compute_normals();
-    viewer.data().show_texture = true;
+    viewer.data.set_uv(sData.V_o*uv_scale_param);
+    viewer.data.compute_normals();
+    viewer.core.show_texture = true;
 
     first_iter = false;
   } else {
     slim_solve(sData,1); // 1 iter
-    viewer.data().set_uv(sData.V_o*uv_scale_param);
+    viewer.data.set_uv(sData.V_o*uv_scale_param);
     cout << "time = " << timer.getElapsedTime() << endl;
   }
 }
 
-void soft_const_demo_iter(igl::opengl::glfw::Viewer& viewer) {
+void soft_const_demo_iter(igl::viewer::Viewer& viewer) {
   if (first_iter) {
 
     igl::read_triangle_mesh(TUTORIAL_SHARED_PATH "/circle.obj", V, F);
@@ -129,20 +128,20 @@ void soft_const_demo_iter(igl::opengl::glfw::Viewer& viewer) {
     double soft_const_p = 1e5;
     slim_precompute(V,F,V_0,sData,igl::SLIMData::SYMMETRIC_DIRICHLET,b,bc,soft_const_p);
 
-    viewer.data().set_mesh(V, F);
+    viewer.data.set_mesh(V, F);
     viewer.core.align_camera_center(V,F);
-    viewer.data().compute_normals();
-    viewer.data().show_lines = true;
+    viewer.data.compute_normals();
+    viewer.core.show_lines = true;
 
     first_iter = false;
 
   } else {
     slim_solve(sData,1); // 1 iter
-    viewer.data().set_mesh(sData.V_o, F);
+    viewer.data.set_mesh(sData.V_o, F);
   }
 }
 
-void deform_3d_demo_iter(igl::opengl::glfw::Viewer& viewer) {
+void deform_3d_demo_iter(igl::viewer::Viewer& viewer) {
   if (first_iter) {
     igl::readOBJ(TUTORIAL_SHARED_PATH "/cube_40k.obj", V, F);
 
@@ -153,7 +152,7 @@ void deform_3d_demo_iter(igl::opengl::glfw::Viewer& viewer) {
     double soft_const_p = 1e5;
     sData.exp_factor = 5.0;
     slim_precompute(V,F,V_0,sData,igl::SLIMData::EXP_CONFORMAL,b,bc,soft_const_p);
-    //cout << "precomputed" << endl;
+    cout << "precomputed" << endl;
 
     first_iter = false;
     display_3d_mesh(viewer);
@@ -164,7 +163,7 @@ void deform_3d_demo_iter(igl::opengl::glfw::Viewer& viewer) {
   }
 }
 
-void display_3d_mesh(igl::opengl::glfw::Viewer& viewer) {
+void display_3d_mesh(igl::viewer::Viewer& viewer) {
   MatrixXd V_temp; MatrixXi F_temp;
   Eigen::MatrixXd Barycenters;
 
@@ -196,10 +195,10 @@ void display_3d_mesh(igl::opengl::glfw::Viewer& viewer) {
     F_temp.row(i*4+2) << (i*4)+3, (i*4)+2, (i*4)+0;
     F_temp.row(i*4+3) << (i*4)+1, (i*4)+2, (i*4)+3;
   }
-  viewer.data().set_mesh(V_temp,F_temp);
+  viewer.data.set_mesh(V_temp,F_temp);
   viewer.core.align_camera_center(V_temp,F_temp);
-  viewer.data().set_face_based(true);
-  viewer.data().show_lines = true;
+  viewer.data.set_face_based(true);
+  viewer.core.show_lines = true;
 }
 
 int main(int argc, char *argv[]) {
@@ -233,14 +232,14 @@ int main(int argc, char *argv[]) {
 
 
   // Launch the viewer
-  igl::opengl::glfw::Viewer viewer;
+  igl::viewer::Viewer viewer;
   viewer.callback_key_down = &key_down;
 
   // Disable wireframe
-  viewer.data().show_lines = false;
+  viewer.core.show_lines = false;
 
   // Draw checkerboard texture
-  viewer.data().show_texture = false;
+  viewer.core.show_texture = false;
 
   // First iteration
   key_down(viewer, ' ', 0);
@@ -373,7 +372,7 @@ void get_cube_corner_constraints(Eigen::MatrixXd& V, Eigen::MatrixXi& F, Eigen::
   b = igl::cat(1,b,edge4);
 
   bc.resize(b.rows(),3);
-  Eigen::Matrix3d m; m = Eigen::AngleAxisd(0.3 * igl::PI, Eigen::Vector3d(1./sqrt(2.),1./sqrt(2.),0.)/*Eigen::Vector3d::UnitX()*/);
+  Eigen::Matrix3d m; m = Eigen::AngleAxisd(0.3 * M_PI, Eigen::Vector3d(1./sqrt(2.),1./sqrt(2.),0.)/*Eigen::Vector3d::UnitX()*/);
   int i = 0;
   for (; i < cube_edge1.size(); i++) {
     Eigen::RowVector3d edge_rot_center(min_x,min_y,(min_z+max_z)/2.);

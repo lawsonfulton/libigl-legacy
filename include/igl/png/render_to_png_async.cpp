@@ -52,3 +52,7 @@ IGL_INLINE std::thread igl::png::render_to_png_async(
   t.detach();
   return t;
 }
+
+#ifdef IGL_STATIC_LIBRARY
+// template igl::png::render_to_png_async(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int, int, bool, bool)
+#endif
